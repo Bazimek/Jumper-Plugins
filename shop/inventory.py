@@ -67,7 +67,7 @@ class Inventory:
         return [self.data[i : i + 5] if len(self.data) > 5 else self.data for i in range(0, len(self.data), 5)]
 
     def update(self, groups, page=0):
-        header = f"{'#':<3} {'Items':<29} {'Qty':<7} {'Type':<8}\n{'--':<3} {'-'*29:<29} {'-'*4:<7} {'-'*8:<8}"
+        header = f"{'#':<3} {'Položka':<29} {'Počet':<7} {'Typ':<8}\n{'--':<3} {'-'*29:<29} {'-'*4:<7} {'-'*8:<8}"
         fmt = [header]
         for idx, x in enumerate(groups[page], 1):
             line_one = f"{f'{idx}.': <{3}} {x[0]: <{28}s} {x[1]['Qty']: < {9}}{x[1]['Type']: <{7}s}"
@@ -78,13 +78,13 @@ class Inventory:
 
     def build_embed(self, options, page, groups):
         title = "{}'s Inventory".format(self.ctx.author.name)
-        footer = "You are viewing page {} of {}.".format(page + 1 if page > 0 else 1, len(groups))
+        footer = "Prohlížíš si stránku {} z {}.".format(page + 1 if page > 0 else 1, len(groups))
         instructions = (
-            "Type the number for your selection or one of the words below "
-            "for page navigation if there are multiple pages available.\n"
-            "Next page: Type n, next, or >\n"
-            "Previous page: Type b, back, or <\n"
-            "Exit menu system: Type e, x, or exit"
+            "Vyber si položku napsáním čísla položky které vidíš ve sloupci #\n\n"
+            "Další stránka: napiš n, next, nebo >\n"
+            "Předchozí stárnka: napiš b, back, nebo <\n"
+            "Vrátit se na předchozí menu: napiš p nebo prev\n"
+            "Odejít z menu: napiš e, x, nebo exit\n"
         )
         embed = discord.Embed(color=0x5EC6FF)
         embed.add_field(name=title, value=options, inline=False)

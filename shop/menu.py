@@ -21,11 +21,11 @@ class ShopMenu:
             item = await self.menu_loop(data, groups, page, maximum, msg)
         except asyncio.TimeoutError:
             await msg.delete()
-            await self.ctx.send("No response. Menu exited.")
+            await self.ctx.send("Bez odpovědi. Ruším menu.")
             raise RuntimeError
         except MenuExit:
             await msg.delete()
-            await self.ctx.send("Exited menu.")
+            await self.ctx.send("Menu zrušeno.")
             raise RuntimeError
         else:
             if self.mode == 0:
@@ -119,11 +119,11 @@ class ShopMenu:
                 return data
 
     async def build_menu(self, groups, page):
-        footer = "You are viewing page {} of {}.".format(page + 1 if page > 0 else 1, len(groups))
+        footer = "Prohlížíš si stránku {} z {}.".format(page + 1 if page > 0 else 1, len(groups))
         if self.shop is None and self.mode == 0:
             output = ["{} - {}".format(idx, ele) for idx, ele in enumerate(groups[page], 1)]
         elif self.mode == 0:
-            header = f"{'#':<3} {'Name':<29} {'Qty':<7} {'Cost':<8}\n{'--':<3} {'-'*29:<29} {'-'*4:<7} {'-'*8:<8}"
+            header = f"{'#':<3} {'Název':<29} {'Počet':<7} {'Cena':<8}\n{'--':<3} {'-'*29:<29} {'-'*4:<7} {'-'*8:<8}"
             fmt = [header]
             for idx, x in enumerate(groups[page], 1):
                 line_one = f"{f'{idx}.': <{3}} {x[0]: <{29}s} {x[1]['Qty']:<{8}}{x[1]['Cost']: < {7}}"
@@ -132,15 +132,15 @@ class ShopMenu:
                 fmt.append("",)
             output = box("\n".join(fmt), "md")
         elif self.mode == 1 and self.user is None:
-            headers = ("#", "User", "Pending Items")
+            headers = ("#", "Uživatel", "Položky ke schválení")
             fmt = [
                 (idx, discord.utils.get(self.ctx.bot.users, id=int(x[0])).name, len(x[1]))
                 for idx, x in enumerate(groups[page], 1)
             ]
             output = box(tabulate(fmt, headers=headers, numalign="left"), lang="md")
         elif self.mode == 1:
-            headers = ("#", "Item", "Order ID", "Timestamp")
-            fmt = [(idx, x[1]["Item"], x[0], x[1]["Timestamp"]) for idx, x in enumerate(groups[page], 1)]
+            headers = ("#", "Položka", "ID objednávky", "Čas")
+            fmt = [(idx, x[1]["Položka"], x[0], x[1]["Čas"]) for idx, x in enumerate(groups[page], 1)]
 
             output = box(tabulate(fmt, headers=headers, numalign="left"), lang="md")
         else:
@@ -169,19 +169,18 @@ class ShopMenu:
 
     def build_embed(self, options, footer):
         instructions = (
-            "Type the number for your selection or one of the words below "
-            "for page navigation if there are multiple pages available.\n"
-            "Next page: Type n, next, or >\n"
-            "Previous page: Type b, back, or <\n"
-            "Return to previous menu: Type p or prev\n"
-            "Exit menu system: Type e, x, or exit"
+            "Vyber si obchod/položku napsáním čísla před názvem obchodu/položky nebo ve sloupci # (např.: 1 - Rust = číslo obchodu Rust je 1)\n\n"
+            "Další stránka: napiš n, next, nebo >\n"
+            "Předchozí stárnka: napiš b, back, nebo <\n"
+            "Vrátit se na předchozí menu: napiš p nebo prev\n"
+            "Odejít z menu: napiš e, x, nebo exit\n"
         )
 
         if self.shop is None and self.mode == 0:
             options = "\n".join(options)
 
         if self.mode == 0:
-            title = "{}".format(self.shop if self.shop else "List of shops")
+            title = "{}".format(self.shop if self.shop else "Seznam obchodů")
         else:
             title = "{} Pending".format(self.user.name if self.user else "Items")
 

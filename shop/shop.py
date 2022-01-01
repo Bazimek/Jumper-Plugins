@@ -95,7 +95,7 @@ class Shop(commands.Cog):
         except AttributeError:
             return await ctx.send("You can't use this command in DMs when not in global mode.")
         if not await instance.Inventory():
-            return await ctx.send("You don't have any items to display.")
+            return await ctx.send("Nemáš žádné položky k zobrazení.")
         data = await instance.Inventory.all()
         menu = Inventory(ctx, list(data.items()))
 
@@ -159,16 +159,16 @@ class Shop(commands.Cog):
         except AttributeError:
             return await ctx.send("You can't use this command in DMs when not in global mode.")
         if not await instance.Shops():
-            return await ctx.send("No shops have been created yet.")
+            return await ctx.send("Žádný obchod ještě nebyl vytvořen.")
         if await instance.Settings.Closed():
-            return await ctx.send("The shop system is currently closed.")
+            return await ctx.send("Obchod je aktuálně zavřený.")
 
         shops = await instance.Shops.all()
         col = await self.check_availability(ctx, shops)
         if not col:
             return await ctx.send(
-                "Either no items have been created, you need a higher role,  "
-                "or this command should be used in a server and not DMs."
+                "Žádné položky nebyly vytvořeny, nebo nemáš potřebnou roli a "
+                "nebo tento příkaz musí být použit na serveru, nikoliv v SZ."
             )
         if purchase:
             try:
@@ -191,9 +191,9 @@ class Shop(commands.Cog):
         try:
             await sm.order(shop, item)
         except asyncio.TimeoutError:
-            await ctx.send("Request timed out.")
+            await ctx.send("Čas požadavku vypršel.")
         except ExitProcess:
-            await ctx.send("Transaction canceled.")
+            await ctx.send("Transakce byla zrušena.")
 
     @commands.max_concurrency(1, commands.BucketType.user)
     @shop.command()
@@ -244,14 +244,14 @@ class Shop(commands.Cog):
         )
 
         def check(m):
-            return (m.author == user and m.content.lower() in ("yes", "no", cancel)) or (
+            return (m.author == user and m.content.lower() in ("ano", "ne", cancel)) or (
                 m.author == ctx.author and m.content.lower() == cancel
             )
 
         try:
             decision = await ctx.bot.wait_for("message", timeout=25, check=check)
         except asyncio.TimeoutError:
-            return await ctx.send("Trade request timed out. Canceled trade.")
+            return await ctx.send("Čas obchodu vypršel. Obchod byl zrušen.")
 
         if decision.content.lower() in ("no", cancel):
             return await ctx.send("Trade canceled.")
@@ -274,7 +274,7 @@ class Shop(commands.Cog):
         try:
             offer = await ctx.bot.wait_for("message", timeout=25, check=predicate)
         except asyncio.TimeoutError:
-            return await ctx.send("Trade request timed out. Canceled trade.")
+            return await ctx.send("Čas obchodu vypršel. Obchod byl zrušen.")
         if offer.content.lower() == cancel:
             return await ctx.send("Trade canceled.")
         qty, item2 = [x.strip() for x in offer.content.split('"')[:2] if x]
@@ -284,7 +284,7 @@ class Shop(commands.Cog):
         )
 
         def check2(m):
-            return (m.author == ctx.author and m.content.lower() in ("yes", "no", cancel)) or (
+            return (m.author == ctx.author and m.content.lower() in ("ano", "ne", cancel)) or (
                 m.author == user and m.content.lower() == cancel
             )
 
@@ -335,7 +335,7 @@ class Shop(commands.Cog):
         except asyncio.TimeoutError:
             return await ctx.send("No Response. Action canceled.")
 
-        if choice.content.lower() == "yes":
+        if choice.content.lower() == "ano":
             await self.config.clear_all()
             msg = "{0.name} ({0.id}) wiped all shop data.".format(ctx.author)
             log.info(msg)
@@ -351,7 +351,7 @@ class Shop(commands.Cog):
         """Displays the pending menu."""
         instance = await self.get_instance(ctx, settings=True)
         if not await instance.Pending():
-            return await ctx.send("There are not any pending items.")
+            return await ctx.send("Nejsou zde žádné položky ke schválení.")
         data = await instance.Pending.all()
         menu = ShopMenu(ctx, data, mode=1, sorting="name")
 
@@ -450,7 +450,7 @@ class Shop(commands.Cog):
         """Completely clears a user's inventory."""
         await ctx.send("Are you sure you want to completely wipe {}'s inventory?".format(user.name))
         choice = await ctx.bot.wait_for("message", timeout=25, check=Checks(ctx).confirm)
-        if choice.content.lower() != "yes":
+        if choice.content.lower() != "ano":
             return await ctx.send("Canceled inventory wipe.")
         instance = await self.get_instance(ctx=ctx, user=user)
         await instance.Inventory.clear()
@@ -486,7 +486,7 @@ class Shop(commands.Cog):
         try:
             await im.run(action)
         except asyncio.TimeoutError:
-            return await ctx.send("Request timed out. Process canceled.")
+            return await ctx.send("Čas požadavku vypršel. Proces byl zrušen.")
 
     @shop.command()
     @global_permissions()
@@ -511,7 +511,7 @@ class Shop(commands.Cog):
         except asyncio.TimeoutError:
             return await ctx.send("Response timed out.")
 
-        if choice.content.lower() == "yes":
+        if choice.content.lower() == "ano":
             async with instance.Shops() as shops:
                 for item in shops[shop]["Items"].values():
                     if item["Type"] != "auto":
@@ -596,7 +596,7 @@ class Shop(commands.Cog):
         except asyncio.TimeoutError:
             return await ctx.send("No response. Action canceled.")
 
-        if choice.content.lower() != "yes":
+        if choice.content.lower() != "ano":
             return await ctx.send("Shop will remain {}.".format(mode))
         await ctx.send(
             "Changing shop to {0} will **DELETE ALL** current shop data. Are "
@@ -607,7 +607,7 @@ class Shop(commands.Cog):
         except asyncio.TimeoutError:
             return await ctx.send("No response. Action canceled.")
 
-        if final.content.lower() == "yes":
+        if final.content.lower() == "ano":
             await self.change_mode(alt)
             log.info("{} ({}) changed the shop mode to {}.".format(author.name, author.id, alt))
             await ctx.send("Shop data deleted! Shop mode is now set to {}.".format(alt))
@@ -685,27 +685,27 @@ class Shop(commands.Cog):
 
     @staticmethod
     async def clear_single_pending(ctx, instance, data, item, user):
-        item_name = data[str(user.id)][item]["Item"]
+        item_name = data[str(user.id)][item]["Položka"]
         await ctx.send(
-            "You are about to clear a pending {} for {}.\nAre you sure "
-            "you wish to clear this item?".format(item_name, user.name)
+            "Chystáš se schválit položku {} pro {}.\nJsi si jistý, "
+            "že chceš schválit tuto položku?".format(item_name, user.name)
         )
         choice = await ctx.bot.wait_for("message", timeout=25, check=Checks(ctx).confirm)
-        if choice.content.lower() == "yes":
+        if choice.content.lower() == "ano":
             async with instance.Pending() as p:
                 del p[str(user.id)][item]
                 if not p[str(user.id)]:
                     del p[str(user.id)]
-            await ctx.send("{} was cleared from {}'s pending by {}.".format(item_name, user.name, ctx.author.name))
-            await user.send("{} cleared your pending {}!".format(ctx.author.name, item_name))
+            await ctx.send("Položka {} od uživatele {} byla schválena uživatelem {}.".format(item_name, user.name, ctx.author.name))
+            await user.send("{} schválil tvou položku {}!".format(ctx.author.name, item_name))
         else:
-            await ctx.send("Action canceled.")
+            await ctx.send("Akce zrušena.")
 
     @staticmethod
     async def clear_all_pending(ctx, instance, user):
         await ctx.send("You are about to clear all pending items from {}.\nAre you sure you wish to do this?")
         choice = await ctx.bot.wait_for("message", timeout=25, check=Checks(ctx).confirm)
-        if choice.content.lower() == "yes":
+        if choice.content.lower() == "ano":
             async with instance.Pending() as p:
                 del p[user.id]
             await ctx.send("All pending items have been cleared for {}.".format(user.name))
@@ -760,10 +760,10 @@ class Shop(commands.Cog):
         timestamp = ctx.message.created_at.now().strftime("%Y-%m-%d %H:%M:%S")
         async with instance.Pending() as p:
             if str(ctx.author.id) in p:
-                p[str(ctx.author.id)][unique_id] = {"Item": item, "Timestamp": timestamp}
+                p[str(ctx.author.id)][unique_id] = {"Položka": item, "Čas": timestamp}
             else:
-                p[str(ctx.author.id)] = {unique_id: {"Item": item, "Timestamp": timestamp}}
-        msg = "{} added {} to your pending list.".format(ctx.author.mention, item)
+                p[str(ctx.author.id)] = {unique_id: {"Položka": item, "Čas": timestamp}}
+        msg = "{} přidal položku {} do seznamu ke schválení.".format(ctx.author.mention, item)
         if await instance.Settings.Alerts():
             alert_role = await instance.Settings.Alert_Role()
             role = discord.utils.get(ctx.guild.roles, name=alert_role)
@@ -864,26 +864,23 @@ class Shop(commands.Cog):
         e.add_field(name=item, value=data[item]["Info"], inline=False)
         if data[item]["Type"].lower() == "Role":
             await ctx.send(
-                "{} Do you wish to redeem {}? This will grant you the role assigned to "
+                "{} Opravdu chceš použít {}? This will grant you the role assigned to "
                 "this item and it will be removed from your inventory "
                 "permanently.".format(ctx.author.mention, item),
                 embed=e,
             )
         else:
             await ctx.send(
-                "{} Do you wish to redeem {}? This will add the item to the pending "
-                "list for an admin to review and grant. The item will be removed from "
-                "your inventory while this is "
-                "processing.".format(ctx.author.mention, item),
+                "{} Opravdu chceš uplatnit položku, která je dole zobrazena? Napiš **ano** / **ne**.".format(ctx.author.mention, item),
                 embed=e,
             )
         try:
             choice = await ctx.bot.wait_for("message", timeout=25, check=Checks(ctx).confirm)
         except asyncio.TimeoutError:
-            return await ctx.send("No Response. Item redemption canceled.")
+            return await ctx.send("Bez odezvy. Uplatnění položky bylo zrušeno.")
 
-        if choice.content.lower() != "yes":
-            return await ctx.send("Canceled item redemption.")
+        if choice.content.lower() != "ano":
+            return await ctx.send("Uplatnění položky bylo zrušeno.")
 
         if data[item]["Type"].lower() == "role":
             return await self.assign_role(ctx, instance, item, data[item]["Role"])
@@ -946,8 +943,7 @@ class ShopManager:
         e = discord.Embed(color=await self.ctx.embed_colour())
         e.add_field(name=item, value=item_data["Info"], inline=False)
         text = (
-            f"How many {item} would you like to purchase?\n*If this "
-            f"is a random item, you can only buy 1 at a time.*"
+            f"Kolik kusů položky {item} si chceš zakoupit? Napiš číslo."
         )
         await self.ctx.send(content=text, embed=e)
 
@@ -1007,7 +1003,7 @@ class ShopManager:
 
         await im.remove(shop, item, stock, amount)
         await self.add(item, item_data, amount)
-        await self.ctx.send("{} purchased {}x {} for {} {}.".format(self.ctx.author.mention, amount, item, cost, cur))
+        await self.ctx.send("{} zakoupil {}x {} za {} {}.".format(self.ctx.author.mention, amount, item, cost, cur))
 
     async def add(self, item, data, quantity):
         async with self.user_data.Inventory() as inv:
@@ -1089,7 +1085,7 @@ class ItemManager:
         item = await self.ctx.bot.wait_for("message", timeout=25, check=predicate2)
         await self.ctx.send("Are you sure you want to delete {} from {}?".format(item.content, shop.content))
         choice = await self.ctx.bot.wait_for("message", timeout=25, check=Checks(self.ctx).confirm)
-        if choice.content.lower() == "yes":
+        if choice.content.lower() == "ano":
             async with self.instance.Shops() as shops:
                 del shops[shop.content]["Items"][item.content]
             await self.ctx.send("{} was deleted from the {}.".format(item.content, shop.content))
